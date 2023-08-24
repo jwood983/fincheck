@@ -41,6 +41,7 @@ class Cusip(object):
     ----------------------------
     """
     def __init__(self, cusip: str):
+        # FIXME: Check on defined variables here; are they needed? Used?
         self.id_ = cusip
         self.is_valid = is_cusip(cusip)
         self.issuer_ = cusip[:6]         # first 6 digits is the issuer
@@ -90,6 +91,7 @@ class Isin(object):
     -------------
     """
     def __init__(self, isin: str):
+        # FIXME: Check on defined variables here; are they needed? Used?
         self.id_ = isin
         self.is_valid = is_isin(isin)
         self.nsin_ = isin[2:-1]
