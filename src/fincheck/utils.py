@@ -2,6 +2,7 @@ from typing import *
 import pkg_resources
 import re
 
+
 def keep_numeric(s: str) -> str:
     """
     Keeps only numeric characters in a string
@@ -10,21 +11,28 @@ def keep_numeric(s: str) -> str:
     ------
         1. 's' -> input string
     """
-    return "".join(c for c in list(s) if c.isnumeric())
+    return "".join(c for c in s if c.isnumeric())
+
 
 def convert_to_n(s: str, return_str: bool = True) -> Union[str, list]:
     """
-    Converts a string into a sequence of digits
-    ------
-    PARAMS
-    ------
-        1. 's' -> input string
-        2. 'return_str' -> If true, returns a string of sequential digits, else returns a list of digits
+    Converts a string into a sequence of digits, based on their location
+    in the alpha-numeric string '0123456789ABC...XYZ'.
+
+    This barfs on values not found in the list, so users must check
+    that a valid string is being processed before passing through this
+    function.
+    
+    Args:
+        * s (str): The string to convert to a numeric list
+        * return_str (bool): A flag to indicate returning a string instead of a list of integers
     """
     char_idxs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if return_str:
         return "".join(str(char_idxs.index(c)) for c in list(s))
-    return [char_idxs.index(c) for c in list(s)]
+    else:
+        return [char_idxs.index(c) for c in list(s)]
+
 
 def ensure_format(s: str, n_chars: int = None) -> str:
     """
@@ -41,7 +49,8 @@ def ensure_format(s: str, n_chars: int = None) -> str:
         assert len(s) == n_chars, f"Input must be a payload of {n_chars} characters."
     return s
 
-def split_payload(s: str) -> Tuple[str, int]:
+
+def split_payload(s: str, payload_len: int = None) -> Tuple[str, int]:
     """
     Splits a string into two groups:
         1. First len(s) - 1 characters which represents the "payload" from which a check digit is calculated from
@@ -51,9 +60,16 @@ def split_payload(s: str) -> Tuple[str, int]:
     ------
         1. 's' -> input string
     """
-    payload = s[:-1]
-    check_digit = int(s[-1])
-    return payload, check_digit
+    if payload_len is None:
+        # if no payload, take last digit
+        return s[:-1], int(s[-1])
+    elif len(s) < payload_len:
+        # the substring is less than the payload length return null check digit
+        return s, None
+    else:
+        # split at the payload & move on
+        return s[:-(payload-1)], int(s[-payload:])
+
 
 def find_and_validate(s: str, pattern: str, validation_fn: Callable = None) -> List:
     """
@@ -68,11 +84,14 @@ def find_and_validate(s: str, pattern: str, validation_fn: Callable = None) -> L
                               - Note this function should return a boolean
     """
     matches = [m for m in re.finditer(pattern, s)]
-    if matches:
-        matches = [m.group(0) for m in matches]
+    if len(matches) > 0:
         if validation_fn:
-            matches = [m for m in matches if validation_fn(m)]
-    return matches
+            return [m.group(0) for m in matches if validation_fn(m.group(0))]
+        else:
+            return [m.group(0) for m in matches]
+    else:
+        return matches
+
 
 def read_csv(path: str, keep_headers: bool = False) -> List:
     """
