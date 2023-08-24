@@ -15,15 +15,20 @@ def luhn_check_digit(s: str) -> int:
     if len(s) % 2 == 1:
         s = "0" + s #zero pad so length is even
     sum_ = 0
-    for idx in range(len(s), 0, -1):
+    for idx in range(len(s), 0, -2):
+        # add even digits
+        sum_ + =s[idx-1])
+        # add odd digits
+        sum_ += (s[idx-1] * 2) % 9
         digit = int(s[idx-1])
-        if idx % 2 == 0:
-            digit *= 2
-            if digit > 9:
-                digit -= 9
+#        if idx % 2 == 0:
+#            digit *= 2
+#            if digit > 9:
+#                digit -= 9
         sum_ += digit
-    
-    return (10 - (sum_ % 10)) % 10 #using mod operator twice asserts the check digit is < 10
+
+    # using mod operator twice asserts the check digit is < 10
+    return (10 - (sum_ % 10)) % 10 
 
 
 def isin_check_digit(s: str) -> int:
@@ -53,16 +58,20 @@ def cusip_check_digit(s: str) -> int:
         1. 's' -> input string
     """
     s = ensure_format(s, n_chars=8)
-    s = convert_to_n(s, return_str=False) #returns a list of digits
-    sum_ = 0
-    for idx in range(len(s)):
-        digit = s[idx]
-        #algorithm isnt zero-indexed, so we want to consider idx+1 or simply flip the logic of the mod operation
-        if idx % 2 != 0:
-            digit *= 2
-        sum_ += int(digit / 10) + digit % 10
-    
-    return (10 - (sum_ % 10)) % 10 
+    s = convert_to_n(s, return_str=False) # returns a list of digits
+    # this should be faster
+    tmp = sum([sum(divmod((2 if idx % 2 else 1) * digit, 10)) for idx, digit in enumerate(s)])
+    return (10 - (tmp % 10)) % 10
+#    sum_ = 0
+#    for idx in range(0, len(s), 2):
+#        sum
+#        digit = s[idx]
+#        #algorithm isnt zero-indexed, so we want to consider idx+1 or simply flip the logic of the mod operation
+#        if idx % 2 != 0:
+#            digit *= 2
+#        sum_ += int(digit / 10) + digit % 10
+#    
+#    return (10 - (sum_ % 10)) % 10 
 
 
 def sedol_check_digit(s: str) -> int:
@@ -80,7 +89,7 @@ def sedol_check_digit(s: str) -> int:
     s = convert_to_n(s, return_str=False)
     weights = [1, 3, 1, 7, 3, 9]
     sum_ = 0
-    for w, v in list(zip(weights, s)):
+    for w, v in zip(weights, s):
         sum_ += w * v
     return (10 - (sum_ % 10)) % 10 
     
